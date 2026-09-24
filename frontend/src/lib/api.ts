@@ -18,10 +18,24 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
+client.interceptors.response.use(
+  (response) => {
+    // If a request intended for the API returned HTML (e.g. from an SPA rewrite fallback), reject it
+    if (typeof response.data === 'string' && (response.data.includes('<!DOCTYPE') || response.data.includes('<!doctype') || response.data.includes('<html'))) {
+      return Promise.reject(new Error('Received HTML response instead of JSON API payload'));
+    }
+    return response;
+  },
+  (error) => Promise.reject(error)
+);
+
 export async function getCurrentUser(): Promise<User | null> {
   try {
-    const { data } = await client.get<User>('/auth/me');
-    return data;
+    const { data } = await client.get('/auth/me');
+    if (!data || typeof data !== 'object' || typeof (data as User).email !== 'string') {
+      return null;
+    }
+    return data as User;
   } catch {
     return null;
   }

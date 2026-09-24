@@ -10,12 +10,14 @@ interface HeaderProps {
 export default function Header({ user, onLogout }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
 
-  const initials = user.name
+  const displayName = user?.name || user?.email || 'User';
+  const initials = displayName
     .split(' ')
+    .filter(Boolean)
     .map((n) => n[0])
     .join('')
     .toUpperCase()
-    .slice(0, 2);
+    .slice(0, 2) || 'U';
 
   return (
     <header className="header">
@@ -50,16 +52,16 @@ export default function Header({ user, onLogout }: HeaderProps) {
           </button>
 
           <div className="avatar-wrapper">
-            {user.avatar ? (
-              <img src={user.avatar} alt={user.name} className="avatar-img" />
+            {user?.avatar ? (
+              <img src={user.avatar} alt={displayName} className="avatar-img" />
             ) : (
               <div className="avatar-fallback">{initials}</div>
             )}
           </div>
 
           <div className="user-info">
-            <span className="user-name">{user.name}</span>
-            <span className="user-email">{user.email}</span>
+            <span className="user-name">{displayName}</span>
+            <span className="user-email">{user?.email || ''}</span>
           </div>
 
           <button onClick={onLogout} className="btn-logout" title="Sign Out">

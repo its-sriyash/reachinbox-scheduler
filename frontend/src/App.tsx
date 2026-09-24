@@ -58,10 +58,12 @@ export default function App() {
     );
   }
 
+  const isValidUser = Boolean(user && typeof user === 'object' && typeof user.email === 'string');
+
   return (
     <ThemeProvider>
-      {user ? (
-        <Dashboard user={user} onLogout={handleLogout} />
+      {isValidUser ? (
+        <Dashboard user={user!} onLogout={handleLogout} />
       ) : (
         <Login onDevLogin={handleDevLogin} />
       )}
