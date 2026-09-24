@@ -424,3 +424,57 @@ curl http://localhost:5000/health
 | **Idempotency** | Atomic `SCHEDULED` $\rightarrow$ `PROCESSING` claim | PASS |
 | **Restart Persistence** | Verified across actual process termination and recovery | PASS |
 | **Frontend UI Shell** | Dark/orange ReachInbox design with CSV parser & Compose flow | PASS |
+
+---
+
+## 27. Production Deployment Guide
+
+The application is architected for zero-friction cloud deployment using **Vercel** for the React frontend and **Render** for the Express backend, PostgreSQL database, and Redis instance.
+
+### One-Click Deployments
+
+| Component | Platform | Action |
+| :--- | :--- | :--- |
+| **Backend + DB + Redis** | Render | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/its-sriyash/reachinbox-scheduler) |
+| **Frontend SPA** | Vercel | [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/its-sriyash/reachinbox-scheduler&root-directory=frontend) |
+
+---
+
+### Step 1: Deploy Backend, PostgreSQL, and Redis (Render)
+
+1. Click the **Deploy to Render** button above or go to [Render Dashboard](https://dashboard.render.com) $\rightarrow$ **New +** $\rightarrow$ **Blueprint**.
+2. Select your repository: `its-sriyash/reachinbox-scheduler`.
+3. Render automatically reads [`render.yaml`](./render.yaml) and provisions:
+   - **`reachinbox-backend`**: Node.js Web Service running Express + BullMQ worker
+   - **`reachinbox-db`**: Managed PostgreSQL 16 database
+   - **`reachinbox-redis`**: Managed Key-Value / Redis instance
+4. Set the prompt environment variables in the Render Dashboard:
+   - `SMTP_USER`: Your Ethereal or custom SMTP username
+   - `SMTP_PASSWORD`: Your Ethereal or custom SMTP password
+   - `FRONTEND_URL`: `https://<your-vercel-domain>.vercel.app` (or update after deploying frontend)
+   - `GOOGLE_CLIENT_ID`: (Optional) Your Google Cloud OAuth Client ID
+   - `GOOGLE_CLIENT_SECRET`: (Optional) Your Google Cloud OAuth Client Secret
+   - `GOOGLE_CALLBACK_URL`: `https://<your-render-domain>.onrender.com/api/auth/google/callback`
+5. Click **Apply**. Render automatically compiles TypeScript, runs Prisma migrations (`npx prisma migrate deploy`), and starts the backend service.
+
+---
+
+### Step 2: Deploy Frontend (Vercel)
+
+1. Click the **Deploy with Vercel** button above or import repository on [Vercel](https://vercel.com/new).
+2. Configure Project Settings:
+   - **Framework Preset**: Vite
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+3. Add Environment Variable:
+   - `VITE_API_BASE_URL`: `https://<your-render-domain>.onrender.com/api`
+4. Click **Deploy**. Vercel will build and serve the single-page application with SPA routing rewrite rules configured in `frontend/vercel.json`.
+
+---
+
+### Step 3: Link & Verify
+
+1. Update `FRONTEND_URL` in your Render backend settings to point to your live Vercel URL (e.g., `https://reachinbox-scheduler.vercel.app`).
+2. If using real Google OAuth: Add `https://<your-render-domain>.onrender.com/api/auth/google/callback` to **Authorized redirect URIs** in your Google Cloud Console.
+3. Open the live Vercel frontend URL, test the Sandbox or Google Login, and schedule a test campaign. Check `/health` on the backend to confirm `db: connected` and `redis: connected`.

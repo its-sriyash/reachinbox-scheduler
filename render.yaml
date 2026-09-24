@@ -4,7 +4,7 @@ services:
     runtime: node
     rootDir: backend
     buildCommand: npm install && npx prisma generate && npm run build
-    startCommand: npm start
+    startCommand: npx prisma migrate deploy && npm start
     envVars:
       - key: PORT
         value: 10000
@@ -14,16 +14,11 @@ services:
         fromDatabase:
           name: reachinbox-db
           property: connectionString
-      - key: REDIS_HOST
+      - key: REDIS_URL
         fromService:
-          type: redis
+          type: keyvalue
           name: reachinbox-redis
-          property: host
-      - key: REDIS_PORT
-        fromService:
-          type: redis
-          name: reachinbox-redis
-          property: port
+          property: connectionString
       - key: WORKER_CONCURRENCY
         value: "5"
       - key: RATE_LIMIT_WINDOW_SECONDS
@@ -49,11 +44,11 @@ services:
       - key: GOOGLE_CALLBACK_URL
         sync: false
 
+  - type: keyvalue
+    name: reachinbox-redis
+    ipAllowList: []
+
 databases:
   - name: reachinbox-db
     databaseName: reachinbox
     user: reachinbox
-
-  - type: redis
-    name: reachinbox-redis
-    ipAllowList: []
