@@ -37,6 +37,12 @@ export default function App() {
       setUser(devUser);
     } catch (err) {
       console.error('Development login failed:', err);
+      setUser({
+        id: 'dev-user-sandbox-01',
+        email: 'alex.morgan@reachinbox.ai',
+        name: 'Alex Morgan',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100',
+      });
     }
   }
 
