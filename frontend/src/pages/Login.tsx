@@ -22,7 +22,15 @@ export default function Login({ onDevLogin }: LoginProps) {
   }, []);
 
   function handleGoogleLogin() {
-    window.location.href = getGoogleAuthUrl();
+    const authUrl = getGoogleAuthUrl();
+    if (!import.meta.env.VITE_API_BASE_URL && window.location.hostname !== 'localhost') {
+      showToast(
+        'Backend server is not connected to this Vercel deployment. Set VITE_API_BASE_URL or use the Development Sandbox below!',
+        'error'
+      );
+      return;
+    }
+    window.location.href = authUrl;
   }
 
   return (
